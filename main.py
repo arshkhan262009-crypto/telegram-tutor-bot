@@ -1,13 +1,13 @@
 import os
 import telebot
-from google import genai
 from PIL import Image
+from google import genai
 
-# Fetch tokens securely from the cloud environment variables
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Fetching tokens from environment variables
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+bot = telebot.TeleBot(BOT_TOKEN)
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 generation_config = {
@@ -17,7 +17,7 @@ generation_config = {
     "max_output_tokens": 2048,
 }
 
-system_instruction = "You are an elite, empathetic, and human-like academic tutor. Answer students questions step-by-step with an encouraging tone. Always structure complex"
+system_instruction = "You are an elite, empathetic, and human-like academic tutor. Answer students questions step-by-step with an encouraging tone. Always structure complex answers clearly."
 
 @bot.message_handler(content_types=['text', 'photo'])
 def handle_student_messages(message):
@@ -30,21 +30,27 @@ def handle_student_messages(message):
                 f.write(downloaded_file)
                 
             img = Image.open("temp.jpg")
-            caption = message.caption if message.caption else "Please solve and explain this step-by-step."
+            caption = message.caption if message.caption else "Please solve and explain this."
             
-          response = client.models.generate_content(
+            response = client.models.generate_content(
                 model="gemini-1.5-flash",
                 contents=[caption, img],
-                config={"generation_config": generation_config, "system_instruction": system_instruction}
+                config={
+                    "generation_config": generation_config, 
+                    "system_instruction": system_instruction
+                }
             )
             bot.reply_to(message, response.text)
             os.remove("temp.jpg")
             
         elif message.content_type == 'text':
-           response = client.models.generate_content(
+            response = client.models.generate_content(
                 model="gemini-1.5-flash",
                 contents=message.text,
-                config={"generation_config": generation_config, "system_instruction": system_instruction}
+                config={
+                    "generation_config": generation_config, 
+                    "system_instruction": system_instruction
+                }
             )
             bot.reply_to(message, response.text)
             
@@ -52,5 +58,5 @@ def handle_student_messages(message):
         print(f"Error encountered: {e}")
 
 if name == "main":
-    print("Your Student Tutor Bot is running securely...")
+    print("Bot is starting up...")
     bot.infinity_polling()
