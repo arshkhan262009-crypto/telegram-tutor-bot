@@ -32,12 +32,20 @@ def handle_student_messages(message):
             img = Image.open("temp.jpg")
             caption = message.caption if message.caption else "Please solve and explain this step-by-step."
             
-            response = model.generate_content([caption, img])
+          response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=[caption, img],
+                config={"generation_config": generation_config, "system_instruction": system_instruction}
+            )
             bot.reply_to(message, response.text)
             os.remove("temp.jpg")
             
         elif message.content_type == 'text':
-            response = model.generate_content(message.text)
+           response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=message.text,
+                config={"generation_config": generation_config, "system_instruction": system_instruction}
+            )
             bot.reply_to(message, response.text)
             
     except Exception as e:
